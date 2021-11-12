@@ -10,7 +10,7 @@ $ npm i -S api-call-simplifier
 
 ## Usage
 
-TODO: Write usage instructions
+[![Edit demo-api-call-simplifier](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/vibrant-noyce-wpgg7?fontsize=14&hidenavigation=1&module=%2Fcore%2Fapi.js&theme=dark&view=editor)
 
 ## Contributing
 
