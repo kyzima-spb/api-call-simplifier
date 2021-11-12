@@ -122,19 +122,24 @@ const createRepository = $axios => (route, {lookup, actions}={}) => {
       config.data = payload;
       return ctx.request(config);
     }),
-  }
-  const allowedMethods = Object.keys(methods);
+  };
 
-  if (actions) {
-    actions = new Set(actions);
-    actions = allowedMethods.filter(i => actions.has(i));
-  } else {
-    actions = allowedMethods;
+  actions = actions || Object.keys(methods);
+
+  for (let [name, method] of Object.entries(methods)) {
+    methods['$' + name] = (...args) => method(...args).then(resp => resp.data);
   }
 
-  return Object.fromEntries(
-    Array.from(actions, method => [method, methods[method]])
-  );
+  const allowedMethods = {};
+
+  for (let name of actions) {
+    if (name in methods) {
+      allowedMethods[name] = methods[name];
+      allowedMethods['$' + name] = methods['$' + name];
+    }
+  }
+
+  return allowedMethods;
 }
 
 
