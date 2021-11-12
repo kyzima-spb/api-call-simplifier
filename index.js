@@ -134,7 +134,7 @@ const createRepository = $axios => (route, {lookup, actions}={}) => {
 }
 
 
-export default $axios => ({
+module.exports = $axios => ({
   apiCall: createApiCall($axios),
   repository: createRepository($axios),
 });
