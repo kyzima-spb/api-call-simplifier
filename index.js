@@ -48,7 +48,11 @@ const createApiCall = $axios => (route, method, callback) => {
     },
 
     request(config) {
-      return $axios.$request(config);
+      return $axios.request(config);
+    },
+
+    $request(config) {
+      return this.request(config).then(resp => resp.data);
     },
   };
 
