@@ -1,0 +1,26 @@
+{
+  "name": "api-call-simplifier",
+  "version": "0.1.0",
+  "description": "A small library that makes it easy to write a client to work with the API.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kyzima-spb/api-call-simplifier.git"
+  },
+  "keywords": [
+    "api",
+    "web api",
+    "rest api",
+    "axios",
+    "api client"
+  ],
+  "author": "Kirill Vercetti",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kyzima-spb/api-call-simplifier/issues"
+  },
+  "homepage": "https://github.com/kyzima-spb/api-call-simplifier#readme"
+}
