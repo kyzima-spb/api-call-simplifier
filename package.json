@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/kyzima-spb/api-call-simplifier/issues"
   },
-  "homepage": "https://github.com/kyzima-spb/api-call-simplifier#readme"
+  "homepage": "https://github.com/kyzima-spb/api-call-simplifier#readme",
+  "dependencies": {
+    "axios": "^0.24.0"
+  }
 }
