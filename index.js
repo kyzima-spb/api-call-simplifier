@@ -1,3 +1,6 @@
+const exceptions = require('./exceptions');
+
+
 function makeItemRoute(collectionRoute, lookup) {
   // Возвращает маршрут с именем параметра, уникально идентифицирующим ресурс.
   collectionRoute = collectionRoute.replace(/\/$/, '');
@@ -47,8 +50,27 @@ const createApiCall = $axios => (route, method, callback) => {
       };
     },
 
-    request(config) {
-      return $axios.request(config);
+    async request(config) {
+      try {
+        return await $axios.request(config);
+      } catch (err) {
+        if (err.response) {
+          const resp = err.response;
+          const status = resp.status;
+          let ExceptionClass;
+
+          if (status === 412) {
+            ExceptionClass = exceptions.ValidationError;
+          } else {
+            ExceptionClass = exceptions.ApiError;
+          }
+
+          return Promise.reject(
+            new ExceptionClass({message: err.message, resp})
+          );
+        }
+        return Promise.reject(err);
+      }
     },
 
     $request(config) {
