@@ -25,7 +25,7 @@ class ApiError extends Error {
 }
 
 
-class ValidationError extends Error {
+class ValidationError extends ApiError {
   get errors() {
     // Возвращает массив ошибок валидации.
     return this.detail ? this.detail.errors : undefined;

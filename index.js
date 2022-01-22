@@ -59,7 +59,7 @@ const createApiCall = $axios => (route, method, callback) => {
           const status = resp.status;
           let ExceptionClass;
 
-          if (status === 412) {
+          if (status === 422) {
             ExceptionClass = exceptions.ValidationError;
           } else {
             ExceptionClass = exceptions.ApiError;
