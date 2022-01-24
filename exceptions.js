@@ -33,4 +33,7 @@ class ValidationError extends ApiError {
 }
 
 
-module.exports = { ApiError, ValidationError };
+module.exports = {
+  ApiError,
+  ValidationError,
+};
