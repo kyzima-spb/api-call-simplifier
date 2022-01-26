@@ -1,4 +1,9 @@
 const exceptions = require('./exceptions');
+const exceptionsMap = new Map([
+  [412, exceptions.PreconditionFailedError],
+  [428, exceptions.PreconditionRequiredError],
+  [422, exceptions.ValidationError],
+]);
 
 
 function makeItemRoute(collectionRoute, lookup) {
@@ -56,15 +61,7 @@ const createApiCall = $axios => (route, method, callback) => {
       } catch (err) {
         if (err.response) {
           const resp = err.response;
-          const status = resp.status;
-          let ExceptionClass;
-
-          if (status === 422) {
-            ExceptionClass = exceptions.ValidationError;
-          } else {
-            ExceptionClass = exceptions.ApiError;
-          }
-
+          const ExceptionClass = exceptionsMap.get(resp.status) || exceptions.ApiError;
           return Promise.reject(
             new ExceptionClass({message: err.message, resp})
           );

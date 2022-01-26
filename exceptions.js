@@ -25,6 +25,10 @@ class ApiError extends Error {
 }
 
 
+class PreconditionRequiredError extends ApiError {}
+class PreconditionFailedError extends ApiError {}
+
+
 class ValidationError extends ApiError {
   get errors() {
     // Возвращает массив ошибок валидации.
@@ -35,5 +39,7 @@ class ValidationError extends ApiError {
 
 module.exports = {
   ApiError,
+  PreconditionRequiredError,
+  PreconditionFailedError,
   ValidationError,
 };
