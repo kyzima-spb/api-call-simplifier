@@ -124,7 +124,7 @@ const createRepository = $axios => (route, {lookup, actions}={}) => {
       return ctx.request(config);
     }),
 
-    list: apiCall(route, 'get', ctx => ({ id, params }) => {
+    list: apiCall(route, 'get', ctx => ({ id, params }={}) => {
       const config = ctx.makeConfig();
 
       if (id) {
