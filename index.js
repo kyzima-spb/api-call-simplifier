@@ -38,42 +38,42 @@ const createApiCall = $axios => (route, method, callback) => {
    *     makeConfig() - создает и возвращает новый экземпляр конфигурации Axios.
    *     request(config) - выполняет HTTP запрос.
    */
-  const context = {
-    makeConfig() {
-      return {
-        method: method || 'get',
+  const makeConfig = function () {
+    return {
+      method: method || 'get',
+      params: {},
+      data: {},
+      route: {
+        value: route,
         params: {},
-        data: {},
-        route: {
-          value: route,
-          params: {},
-        },
+      },
 
-        get url() {
-          return makeUrl(this.route.value, this.route.params);
-        },
-      };
-    },
-
-    async request(config) {
-      try {
-        return await $axios.request(config);
-      } catch (err) {
-        if (err.response) {
-          const resp = err.response;
-          const ExceptionClass = exceptionsMap.get(resp.status) || exceptions.ApiError;
-          return Promise.reject(
-            new ExceptionClass({message: err.message, resp})
-          );
-        }
-        return Promise.reject(err);
-      }
-    },
-
-    $request(config) {
-      return this.request(config).then(resp => resp.data);
-    },
+      get url() {
+        return makeUrl(this.route.value, this.route.params);
+      },
+    };
   };
+
+  const request = async function (config) {
+    try {
+      return await $axios.request(config);
+    } catch (err) {
+      if (err.response) {
+        const resp = err.response;
+        const ExceptionClass = exceptionsMap.get(resp.status) || exceptions.ApiError;
+        return Promise.reject(
+          new ExceptionClass({message: err.message, resp})
+        );
+      }
+      return Promise.reject(err);
+    }
+  };
+
+  const $request = function (config) {
+    return request(config).then(resp => resp.data);
+  };
+
+  const context = { makeConfig, request, $request };
 
   if (callback) {
     return callback(context);
