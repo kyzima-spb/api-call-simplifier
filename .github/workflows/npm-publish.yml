@@ -6,6 +6,9 @@ name: Publish Node.js package to NPM
 on:
   release:
     types: [ published ]
+  push:
+    branches:
+      - master
 
 jobs:
   build:
