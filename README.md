@@ -14,22 +14,22 @@ $ npm i -S api-call-simplifier
 
 ```javascript
 const axios = require('axios');
-const Repository = require('api-call-simplifier');
+const API = require('api-call-simplifier');
 
 
-const { apiCall, repository } = Repository(axios.create({
+const { apiCall, resource } = API(axios.create({
     baseURL: 'https://jsonplaceholder.typicode.com',
 }));
 
 const api = {
-    posts: repository("/posts"),
-    comments: repository("/comments"),
-    albums: repository("/albums"),
-    photos: repository("/photos"),
-    todos: repository("/todos"),
-    users: repository("/users"),
+    posts: resource('/posts'),
+    comments: resource('/comments'),
+    albums: resource('/albums'),
+    photos: resource('/photos'),
+    todos: resource('/todos'),
+    users: resource('/users'),
     post: {
-        comments: repository("/posts/<id>/comments")
+        comments: resource('/posts/<id>/comments')
     }
 };
 ```

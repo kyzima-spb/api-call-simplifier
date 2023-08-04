@@ -9,8 +9,7 @@ const exceptionsMap = new Map([
 function makeItemRoute(collectionRoute, lookup) {
   // Возвращает маршрут с именем параметра, уникально идентифицирующим ресурс.
   collectionRoute = collectionRoute.replace(/\/$/, '');
-  lookup = lookup || 'id';
-  return `${collectionRoute}/<${lookup}>`;
+  return lookup ? `${collectionRoute}/<${lookup}>` : collectionRoute;
 }
 
 
@@ -83,7 +82,7 @@ const createApiCall = $axios => (route, method, callback) => {
 }
 
 
-const createRepository = $axios => (route, {lookup, actions}={}) => {
+const createRepository = $axios => (route, {lookup='id', actions}={}) => {
   /**
    * Создает и возвращае объект для работы с ресурсами REST API.
    *
@@ -96,15 +95,21 @@ const createRepository = $axios => (route, {lookup, actions}={}) => {
    */
   const apiCall = createApiCall($axios);
   const itemRoute = makeItemRoute(route, lookup);
+  const prepareLookup = id => {
+    if (!!lookup && !id) {
+      throw new Error('Resource lookup is required argument.');
+    }
+    return id;
+  };
   const methods = {
     create: apiCall(route, 'post', ctx => (id, payload) => {
       const config = ctx.makeConfig();
 
-      if (typeof payload === 'undefined') {
-        config.data = id;
-      } else {
-        config.route.params = id;
+      if (id && payload) {
+        config.route.params[lookup] = id;
         config.data = payload;
+      } else {
+        config.data = id;
       }
 
       return ctx.request(config);
@@ -113,14 +118,14 @@ const createRepository = $axios => (route, {lookup, actions}={}) => {
     delete: apiCall(route, 'delete', ctx => id => {
       const config = ctx.makeConfig();
       config.route.value = itemRoute;
-      config.route.params = id;
+      config.route.params[lookup] = prepareLookup(id);
       return ctx.request(config);
     }),
 
     get: apiCall(route, 'get', ctx => id => {
       const config = ctx.makeConfig();
       config.route.value = itemRoute;
-      config.route.params = id;
+      config.route.params[lookup] = prepareLookup(id);
       return ctx.request(config);
     }),
 
@@ -128,7 +133,7 @@ const createRepository = $axios => (route, {lookup, actions}={}) => {
       const config = ctx.makeConfig();
 
       if (id) {
-        config.route.params = id;
+        config.route.params[lookup] = id;
       }
 
       if (params) {
@@ -141,7 +146,7 @@ const createRepository = $axios => (route, {lookup, actions}={}) => {
     update: apiCall(route, 'put', ctx => (id, payload) => {
       const config = ctx.makeConfig();
       config.route.value = itemRoute;
-      config.route.params = id;
+      config.route.params[lookup] = prepareLookup(id);
       config.data = payload;
       return ctx.request(config);
     }),
@@ -168,5 +173,5 @@ const createRepository = $axios => (route, {lookup, actions}={}) => {
 
 module.exports = $axios => ({
   apiCall: createApiCall($axios),
-  repository: createRepository($axios),
+  resource: createRepository($axios),
 });
