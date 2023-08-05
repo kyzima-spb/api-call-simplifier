@@ -147,7 +147,7 @@ const createRepository = $axios => (route, {lookup='id', actions}={}) => {
       const config = ctx.makeConfig();
       config.route.value = itemRoute;
       config.route.params[lookup] = prepareLookup(id);
-      config.data = payload;
+      config.data = lookup ? payload : id;
       return ctx.request(config);
     }),
   };
