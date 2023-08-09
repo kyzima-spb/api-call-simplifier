@@ -1,25 +1,44 @@
 class ApiError extends Error {
-  constructor({ message, status, resp }) {
-    super(resp.data.message || message);
-    this.status = status || resp.status;
-    this.resp = resp;
+  constructor(axiosError) {
+    super(axiosError.response.data.message ?? axiosError.toString());
+    this.original = axiosError;
   }
 
+  /**
+   * Возвращает дополнительную информацию об ошибке.
+   */
   get detail() {
-    // Возвращает дополнительную информацию об ошибке.
-    return this.resp.data.detail;
+    return this.response.data.detail;
   }
 
+  /**
+   * Возвращает URI запрошенного ресурса.
+   */
   get path() {
-    // Возвращает URI запрошенного ресурса.
-    return this.resp.data.path;
+    return this.response.data.path;
   }
 
+  /**
+   * Возвращает объект ответа.
+   */
+  get response() {
+    return this.original.response;
+  }
+
+  /**
+   * Возвращает HTTP код ответа.
+   */
+  get status() {
+    return this.response.status;
+  }
+
+  /**
+   * Возвращает серверное время, в которое возникла ошибка.
+   */
   get timestamp() {
-    // Возвращает серверное время, в которое возникла ошибка.
-    let dt = this.resp.data.timestamp;
+    let dt = this.response.data.timestamp;
     if (dt) {
-      return new Date(this.resp.data.timestamp);
+      return new Date(this.response.data.timestamp);
     }
   }
 }
@@ -30,14 +49,34 @@ class PreconditionFailedError extends ApiError {}
 
 
 class ValidationError extends ApiError {
+  /**
+   * Возвращает массив ошибок валидации.
+   */
   get errors() {
-    // Возвращает массив ошибок валидации.
-    return this.detail ? this.detail.errors : undefined;
+    return this.detail ? this.detail.errors : [];
+  }
+}
+
+
+class ExceptionFactory extends Map {
+  constructor(entries) {
+    super(entries ?? [
+      [412, PreconditionFailedError],
+      [428, PreconditionRequiredError],
+      [422, ValidationError],
+      ['default', ApiError],
+    ]);
+  }
+
+  create(key, err) {
+    const klass = this.get(key) ?? this.get('default');
+    return new klass(err);
   }
 }
 
 
 module.exports = {
+  ExceptionFactory,
   ApiError,
   PreconditionRequiredError,
   PreconditionFailedError,

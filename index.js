@@ -1,20 +1,19 @@
-const exceptions = require('./exceptions');
-const exceptionsMap = new Map([
-  [412, exceptions.PreconditionFailedError],
-  [428, exceptions.PreconditionRequiredError],
-  [422, exceptions.ValidationError],
-]);
+const { ExceptionFactory } = require('./exceptions');
 
 
+/**
+ * Возвращает маршрут с именем параметра, уникально идентифицирующим ресурс.
+ */
 function makeItemRoute(collectionRoute, lookup) {
-  // Возвращает маршрут с именем параметра, уникально идентифицирующим ресурс.
   collectionRoute = collectionRoute.replace(/\/$/, '');
   return lookup ? `${collectionRoute}/<${lookup}>` : collectionRoute;
 }
 
 
+/**
+ * Возвращает URL, построенный из маршрута и параметров.
+ */
 function makeUrl(route, params) {
-  // Возвращает URL, построенный из маршрута и параметров.
   if (typeof params !== 'object' && !Array.isArray(params)) {
     params = [params];
   }
@@ -26,53 +25,34 @@ function makeUrl(route, params) {
 }
 
 
+/**
+ * Возвращает функцию, которая вызывает один из методов API.
+ *
+ * route: маршрут, может содержать именованные параметры.
+ * method: HTTP метод, используемый при вызове API, по-умолчанию GET.
+ * callback: если указан, то должен вернуть функцию, упрощающую работу с API.
+ *     Принимает в качестве аргумента объект контекста, который содеражщит:
+ *     makeConfig() - создает и возвращает новый экземпляр конфигурации Axios.
+ *     request(config) - выполняет HTTP запрос.
+ */
 const createApiCall = $axios => (route, method, callback) => {
-  /**
-   * Возвращает функцию, которая вызывает один из методов API.
-   *
-   * route: маршрут, может содержать именованные параметры.
-   * method: HTTP метод, используемый при вызове API, по-умолчанию GET.
-   * callback: если указан, то должен вернуть функцию, упрощающую работу с API.
-   *     Принимает в качестве аргумента объект контекста, который содеражщит:
-   *     makeConfig() - создает и возвращает новый экземпляр конфигурации Axios.
-   *     request(config) - выполняет HTTP запрос.
-   */
-  const makeConfig = function () {
-    return {
-      method: method || 'get',
-      params: {},
-      data: {},
-      route: {
-        value: route,
-        params: {},
-      },
+  const makeConfig = () => ({
+    method: method || 'get',
+    params: {},
+    data: {},
+    route: {value: route, params: {}},
+    get url() {
+      return makeUrl(this.route.value, this.route.params);
+    },
+  });
 
-      get url() {
-        return makeUrl(this.route.value, this.route.params);
-      },
-    };
-  };
-
-  const request = async function (config) {
-    try {
-      return await $axios.request(config);
-    } catch (err) {
-      if (err.response) {
-        const resp = err.response;
-        const ExceptionClass = exceptionsMap.get(resp.status) || exceptions.ApiError;
-        return Promise.reject(
-          new ExceptionClass({message: err.message, resp})
-        );
-      }
-      return Promise.reject(err);
+  const context = {
+    makeConfig,
+    request: $axios.request,
+    $request(config) {
+      return this.request(config).then(resp => resp.data);
     }
   };
-
-  const $request = function (config) {
-    return request(config).then(resp => resp.data);
-  };
-
-  const context = { makeConfig, request, $request };
 
   if (callback) {
     return callback(context);
@@ -82,18 +62,18 @@ const createApiCall = $axios => (route, method, callback) => {
 }
 
 
-const createRepository = $axios => (route, {lookup='id', actions}={}) => {
-  /**
-   * Создает и возвращае объект для работы с ресурсами REST API.
-   *
-   * route: маршрут, может содержать именованные параметры.
-   * config:
-   *     lookup: имя/имена параметров, уникально идентифицирующих ресурс.
-   *     actions: массив с именами разрешенных над ресурсом действий.
-   *         По-умолчанию разрешены все действия.
-   *         Доступные значения: create, delete, get, list, update.
-   */
-  const apiCall = createApiCall($axios);
+/**
+ * Создает и возвращае объект для работы с ресурсами REST API.
+ *
+ * route: маршрут, может содержать именованные параметры.
+ * config:
+ *   lookup: имя/имена параметров, уникально идентифицирующих ресурс.
+ *   actions:
+ *     массив с именами разрешенных над ресурсом действий.
+ *     По-умолчанию разрешены все действия.
+ *     Доступные значения: create, delete, get, list, update.
+ */
+const createResource = apiCall => (route, {lookup='id', actions}={}) => {
   const itemRoute = makeItemRoute(route, lookup);
   const prepareLookup = id => {
     if (!!lookup && !id) {
@@ -171,7 +151,47 @@ const createRepository = $axios => (route, {lookup='id', actions}={}) => {
 }
 
 
-module.exports = $axios => ({
-  apiCall: createApiCall($axios),
-  resource: createRepository($axios),
-});
+function createErrorResponseInterceptor(
+  instance,
+  {
+    cb,
+    exceptionFactory=new ExceptionFactory(),
+  }={}
+) {
+  instance.interceptors.response.use(
+    response => response,
+    err => {
+      const response = err.response;
+
+      if (response) {
+        err = exceptionFactory.create(response.status, err);
+      }
+
+      return cb ? cb(err) : Promise.reject(err);
+    }
+  );
+}
+
+
+function main(
+  $axios,
+  {
+    errorResponseInterceptor,
+    exceptionFactory,
+  }={}
+) {
+  createErrorResponseInterceptor($axios, {
+    cb: errorResponseInterceptor,
+    exceptionFactory,
+  });
+
+  const apiCall = createApiCall($axios);
+
+  return {
+    apiCall,
+    resource: createResource(apiCall),
+  };
+}
+
+
+module.exports = main;
