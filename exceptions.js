@@ -11,6 +11,10 @@ class ApiError extends Error {
     return this.response.data.detail;
   }
 
+  get isApiError() {
+    return true;
+  }
+
   /**
    * Возвращает URI запрошенного ресурса.
    */
@@ -36,10 +40,8 @@ class ApiError extends Error {
    * Возвращает серверное время, в которое возникла ошибка.
    */
   get timestamp() {
-    let dt = this.response.data.timestamp;
-    if (dt) {
-      return new Date(this.response.data.timestamp);
-    }
+    const dt = this.response.data.timestamp;
+    return dt ? new Date(dt) : undefined;
   }
 }
 

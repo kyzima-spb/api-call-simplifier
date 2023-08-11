@@ -1,6 +1,6 @@
 {
   "name": "api-call-simplifier",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A small library that makes it easy to write a client to work with the API.",
   "main": "index.js",
   "scripts": {
